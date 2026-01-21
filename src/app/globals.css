@@ -1,26 +1,145 @@
 @import "tailwindcss";
+@import "@fontsource/source-serif-4/400.css";
+@import "@fontsource/source-serif-4/400-italic.css";
+@import "@fontsource/source-serif-4/600.css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Core palette - editorial/literary aesthetic */
+  --parchment: #FAF8F5;
+  --charcoal: #2C2C2C;
+  --copper: #B87A5A;
+  --copper-hover: #A66D4F;
+  --muted: #6B6B6B;
+  --border: #E5E2DD;
+  --card: #FFFFFF;
+
+  /* Semantic */
+  --background: var(--parchment);
+  --foreground: var(--charcoal);
+  --accent: var(--copper);
+
+  /* Status colors for proposed changes */
+  --success: #4A7C59;
+  --danger: #C45B5B;
+  --warning: #C9A227;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-parchment: var(--parchment);
+  --color-charcoal: var(--charcoal);
+  --color-copper: var(--copper);
+  --color-copper-hover: var(--copper-hover);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-card: var(--card);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+
+  /* Typography */
+  --font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* Base styles */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+
+/* Story text uses serif */
+.font-story {
+  font-family: var(--font-serif);
+  line-height: 1.8;
+  font-size: 1.125rem;
+}
+
+/* Scene text styling */
+.scene-text {
+  font-family: var(--font-serif);
+  line-height: 1.9;
+  font-size: 1.125rem;
+  color: var(--charcoal);
+}
+
+.scene-text p {
+  margin-bottom: 1.25rem;
+}
+
+.scene-text p:last-child {
+  margin-bottom: 0;
+}
+
+/* Choice buttons */
+.choice-button {
+  font-family: var(--font-serif);
+  font-style: italic;
+  text-align: left;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--card);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.choice-button:hover {
+  border-color: var(--copper);
+  background: #FFFCF9;
+}
+
+/* Diff styling for proposed changes */
+.diff-old {
+  background: #FEE2E2;
+  color: #991B1B;
+  text-decoration: line-through;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.125rem;
+}
+
+.diff-new {
+  background: #DCFCE7;
+  color: #166534;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.125rem;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--parchment);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* Loading animation */
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
 }

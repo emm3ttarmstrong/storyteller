@@ -1,0 +1,108 @@
+// Storyteller - Visual storytelling with character continuity
+// https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Story {
+  id             String      @id @default(cuid())
+  title          String
+  premise        String      @db.Text
+  rollingSummary String?     @db.Text
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  scenes     Scene[]
+  characters Character[]
+}
+
+model Scene {
+  id                 String   @id @default(cuid())
+  storyId            String
+  story              Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  // Tree structure for branching narrative
+  parentSceneId      String?
+  parentScene        Scene?   @relation("SceneParent", fields: [parentSceneId], references: [id], onDelete: SetNull)
+  children           Scene[]  @relation("SceneParent")
+
+  // The choice text that led to this scene (null for opening scene)
+  incomingChoiceText String?  @db.Text
+
+  // Scene content
+  text               String   @db.Text
+  sceneSummary       String?  @db.Text
+
+  createdAt          DateTime @default(now())
+
+  choices Choice[]
+  changes ProposedChange[]
+
+  @@index([storyId])
+  @@index([parentSceneId])
+}
+
+model Choice {
+  id        String  @id @default(cuid())
+  sceneId   String
+  scene     Scene   @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  order     Int
+  text      String  @db.Text
+
+  // If user already chose this, link to the resulting scene
+  toSceneId String?
+
+  @@index([sceneId])
+}
+
+model Character {
+  id        String   @id @default(cuid())
+  storyId   String
+  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  name      String
+
+  // Flexible key-value canon (e.g., {"occupation": "blacksmith", "injured": "true"})
+  canon     Json     @default("{}")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  changes ProposedChange[]
+
+  @@unique([storyId, name])
+  @@index([storyId])
+}
+
+model ProposedChange {
+  id          String       @id @default(cuid())
+  sceneId     String
+  scene       Scene        @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  characterId String
+  character   Character    @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  status      ChangeStatus @default(PROPOSED)
+
+  // The proposed changes: { set: { key: value }, unset: ["key1", "key2"] }
+  diff        Json
+
+  rationale   String?      @db.Text
+
+  createdAt   DateTime     @default(now())
+  decidedAt   DateTime?
+
+  @@index([sceneId])
+  @@index([characterId])
+  @@index([status])
+}
+
+enum ChangeStatus {
+  PROPOSED
+  ACCEPTED
+  REJECTED
+}
