@@ -96,7 +96,7 @@ export function ModelParametersStep({
         </label>
         <textarea
           id="customParams"
-          placeholder="{\"temperature\": 0.8, \"top_p\": 0.9}"
+          placeholder="{'temperature': 0.8, 'top_p': 0.9}"
           rows={4}
           className="w-full px-4 py-3 border border-border rounded-lg bg-input font-mono text-charcoal placeholder:text-muted/50 focus:outline-none focus:border-copper resize-none"
           value={JSON.stringify(data.customParams, null, 2)}

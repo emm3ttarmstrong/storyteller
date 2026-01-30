@@ -49,13 +49,20 @@ export async function POST(
       canon: c.canon as unknown as CharacterCanon,
     }));
 
-    // Generate scene with xAI
+    // Generate scene with xAI - including ALL wizard settings
     const llmResponse = await generateScene({
       premise: story.premise,
       rollingSummary: story.rollingSummary,
       characters,
       lastSceneText,
       choiceText: choiceText || null,
+      // Wizard settings
+      genre: story.genre,
+      tags: story.tags || [],
+      isNsfw: story.isNsfw || false,
+      contentLevel: story.contentLevel || 5,
+      tone: (story.tone as any) || {},
+      modelParams: (story.modelParams as any) || {},
     });
 
     // Create new characters first
