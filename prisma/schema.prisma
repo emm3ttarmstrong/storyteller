@@ -15,6 +15,15 @@ model Story {
   title          String
   premise        String      @db.Text
   rollingSummary String?     @db.Text
+  
+  // New wizard fields
+  genre          String?     // Primary genre selection
+  tags           String[]    // Array of tag names
+  isNsfw         Boolean     @default(true)
+  contentLevel   Int         @default(5)      // 1-10 intensity scale
+  tone           Json        @default("{}")   // Style preferences
+  modelParams    Json        @default("{}")   // Custom AI parameters
+  
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
@@ -105,4 +114,26 @@ enum ChangeStatus {
   PROPOSED
   ACCEPTED
   REJECTED
+}
+
+model Tag {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  category    TagCategory
+  description String?     @db.Text
+  isNsfw      Boolean     @default(false)
+  usageCount  Int         @default(0)
+  createdAt   DateTime    @default(now())
+
+  @@index([category])
+  @@index([usageCount])
+}
+
+enum TagCategory {
+  GENRE
+  THEME
+  CONTENT_WARNING
+  MOOD
+  SETTING
+  CHARACTER_TYPE
 }

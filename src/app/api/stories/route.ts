@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { CreateStorySchema } from "@/lib/schemas";
+import { Prisma } from "@prisma/client";
 
 export async function GET() {
   try {
@@ -38,12 +39,29 @@ export async function POST(request: Request) {
       );
     }
 
-    const { title, premise } = parsed.data;
+    const { title, premise, genre, tags, isNsfw, contentLevel, tone, modelParams, initialCharacters } = parsed.data;
 
     const story = await db.story.create({
       data: {
         title,
         premise,
+        genre,
+        tags,
+        isNsfw,
+        contentLevel,
+        tone: tone as Prisma.InputJsonValue,
+        modelParams: modelParams as Prisma.InputJsonValue,
+        characters: {
+          create: initialCharacters.map(char => ({
+            name: char.name,
+            canon: { 
+              appearance: char.appearance,
+              personality: char.personality,
+              background: char.background,
+              traits: char.traits
+             } as Prisma.InputJsonValue,
+          })),
+        },
       },
     });
 
@@ -51,7 +69,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Failed to create story:", error);
     return NextResponse.json(
-      { error: "Failed to create story" },
+      { error: error instanceof Error ? error.message : "Failed to create story" },
       { status: 500 }
     );
   }
