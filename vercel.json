@@ -1,0 +1,15 @@
+{
+  "functions": {
+    "src/app/api/**": {
+      "maxDuration": 30
+    }
+  },
+  "regions": ["iad1"],
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "installCommand": "npm ci && npx prisma generate",
+  "env": {
+    "PRISMA_GENERATE_DATAPROXY": "true"
+  }
+}
