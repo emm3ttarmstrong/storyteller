@@ -1,18 +1,24 @@
 import OpenAI from "openai";
 import { LlmResponseSchema, type LlmResponse, type CharacterCanon } from "./schemas";
 
-// xAI uses OpenAI-compatible SDK
-const xai = new OpenAI({
-  apiKey: process.env.XAI_API_KEY,
-  baseURL: "https://api.x.ai/v1",
-});
+// xAI uses OpenAI-compatible SDK — lazy init to avoid build-time errors
+let _xai: OpenAI | null = null;
+function getXai(): OpenAI {
+  if (!_xai) {
+    _xai = new OpenAI({
+      apiKey: process.env.XAI_API_KEY,
+      baseURL: "https://api.x.ai/v1",
+    });
+  }
+  return _xai;
+}
 
 interface GenerationContext {
-  storyPrompt: string; // New: from wizard
-  conflict: string; // New: from wizard
-  endingDirection: string; // New: from wizard
-  settingName: string; // New: from wizard
-  settingDescription: string; // New: from wizard
+  storyPrompt?: string | null;
+  conflict?: string | null;
+  endingDirection?: string | null;
+  settingName?: string | null;
+  settingDescription?: string | null;
   
   premise: string;
   rollingSummary: string | null;
@@ -49,7 +55,7 @@ function buildSystemPrompt(context: GenerationContext): string {
   const narrativeStructure = getNarrativeStructureGuidance(context.tone.narrativeStructure);
   const characterFocus = getCharacterFocusGuidance(context.tone.characterFocus);
   
-  return `${context.storyPrompt}
+  return `${context.storyPrompt || ''}
 
 You are a masterful storyteller crafting an interactive narrative. You must respond with ONLY valid JSON matching this exact schema:
 
@@ -218,7 +224,7 @@ export async function generateScene(context: GenerationContext): Promise<LlmResp
     apiParams.presence_penalty = context.modelParams.presence_penalty;
   }
 
-  const response = await xai.chat.completions.create(apiParams);
+  const response = await getXai().chat.completions.create(apiParams);
 
   const content = response.choices[0]?.message?.content;
 
@@ -260,7 +266,7 @@ export async function updateRollingSummary(
   currentSummary: string | null,
   newSceneSummary: string
 ): Promise<string> {
-  const response = await xai.chat.completions.create({
+  const response = await getXai().chat.completions.create({
     model: "grok-3-latest",
     messages: [
       {

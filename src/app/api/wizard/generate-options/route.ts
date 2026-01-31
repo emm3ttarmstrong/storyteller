@@ -2,11 +2,17 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import OpenAI from "openai";
 
-// xAI client (reusing the same setup as lib/xai.ts)
-const xai = new OpenAI({
-  apiKey: process.env.XAI_API_KEY,
-  baseURL: "https://api.x.ai/v1",
-});
+// xAI client — lazy init to avoid build-time errors
+let _xai: OpenAI | null = null;
+function getXai(): OpenAI {
+  if (!_xai) {
+    _xai = new OpenAI({
+      apiKey: process.env.XAI_API_KEY,
+      baseURL: "https://api.x.ai/v1",
+    });
+  }
+  return _xai;
+}
 
 // Request schema validation
 const GenerateOptionsSchema = z.object({
@@ -157,7 +163,7 @@ Generate story tags that fit the chosen character, setting, and potential confli
 }
 
 async function generateCharactersSettings(data: any) {
-  const response = await xai.chat.completions.create({
+  const response = await getXai().chat.completions.create({
     model: "grok-3-latest",
     messages: [
       {
@@ -196,7 +202,7 @@ async function generateCharactersSettings(data: any) {
 }
 
 async function generatePlotOptions(data: any) {
-  const response = await xai.chat.completions.create({
+  const response = await getXai().chat.completions.create({
     model: "grok-3-latest",
     messages: [
       {

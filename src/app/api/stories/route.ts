@@ -52,9 +52,13 @@ export async function POST(request: Request) {
       initialCharacters 
     } = parsed.data;
 
+    // Build premise from wizard data for backwards compatibility
+    const premise = conflict || `A story set in ${settingName || 'an unknown world'}`;
+
     const story = await db.story.create({
       data: {
         title,
+        premise,
         storyPrompt,
         conflict,
         endingDirection,

@@ -56,7 +56,13 @@ export async function POST(
       characters,
       lastSceneText,
       choiceText: choiceText || null,
-      // Wizard settings
+      // Wizard fields
+      storyPrompt: story.storyPrompt,
+      conflict: story.conflict,
+      endingDirection: story.endingDirection,
+      settingName: story.settingName,
+      settingDescription: story.settingDescription,
+      // Legacy settings
       genre: story.genre ?? undefined,
       tags: story.tags ?? [],
       isNsfw: story.isNsfw ?? false,

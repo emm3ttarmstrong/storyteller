@@ -187,14 +187,15 @@ export function StoryWizard({ onClose }: StoryWizardProps) {
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
           {CurrentStepComponent && (
             <CurrentStepComponent
-              data={data}
-              updateData={updateData}
-              onNext={nextStep}
-              onPrev={prevStep}
-              isFirst={currentStep === 1}
-              isLast={currentStep === STEPS.length}
-              onSubmit={submitStory}
-              isSubmitting={isSubmitting}
+              {...{
+                data,
+                updateData,
+                onNext: nextStep,
+                onPrev: prevStep,
+                isFirst: currentStep === 1,
+                onSubmit: submitStory,
+                isSubmitting,
+              } as any}
             />
           )}
         </div>
