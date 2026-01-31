@@ -16,13 +16,20 @@ model Story {
   premise        String      @db.Text
   rollingSummary String?     @db.Text
   
-  // New wizard fields
+  // Wizard fields
   genre          String?     // Primary genre selection
   tags           String[]    // Array of tag names
   isNsfw         Boolean     @default(true)
   contentLevel   Int         @default(5)      // 1-10 intensity scale
   tone           Json        @default("{}")   // Style preferences
   modelParams    Json        @default("{}")   // Custom AI parameters
+  
+  // New wizard redesign fields
+  storyPrompt        String?     @db.Text    // "You are a dark fantasy storyteller..."
+  conflict           String?     @db.Text    // Chosen conflict premise
+  endingDirection    String?                 // "tragedy" | "bittersweet" | "triumphant" | "open"
+  settingName        String?                 // "Ashenmere"
+  settingDescription String?     @db.Text    // Full setting description
   
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
@@ -78,6 +85,9 @@ model Character {
 
   // Flexible key-value canon (e.g., {"occupation": "blacksmith", "injured": "true"})
   canon     Json     @default("{}")
+
+  // New wizard redesign field
+  isProtagonist Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -136,4 +146,14 @@ enum TagCategory {
   MOOD
   SETTING
   CHARACTER_TYPE
+}
+
+model Profile {
+  id                  String    @id @default(cuid())
+  defaultTags         String[]
+  defaultNsfw         Boolean   @default(false)
+  defaultContentLevel Int       @default(5)
+  defaultStoryPrompt  String?   @db.Text
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 }
