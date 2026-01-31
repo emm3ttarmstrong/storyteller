@@ -1,133 +1,57 @@
 #!/bin/bash
-
-# Storyteller Deployment Script
-# Usage: ./deploy.sh [local|production]
-
 set -e
 
-ENVIRONMENT=${1:-local}
+# Storyteller Deploy Script
+# Usage: ./deploy.sh [--skip-build]
+#
+# Syncs source from workspace, rebuilds, and deploys.
+# Run from anywhere — paths are absolute.
 
-echo "🚀 Deploying Storyteller in $ENVIRONMENT mode..."
+WORKSPACE="/data/clawdbot/workspace/storyteller"
+DEPLOY_DIR="/data/clawdbot/workspace/the-citadel/active/storyteller"
 
-# Colors for output
-RED='\033[0;31m'
 GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+NC='\033[0m'
 
-# Helper functions
-print_step() {
-    echo -e "${GREEN}✓ $1${NC}"
-}
+log() { echo -e "${BLUE}>>>${NC} $1"; }
+ok()  { echo -e "${GREEN}OK:${NC} $1"; }
+err() { echo -e "${RED}ERR:${NC} $1"; exit 1; }
 
-print_warning() {
-    echo -e "${YELLOW}⚠ $1${NC}"
-}
+# 1. Sync source (preserve docker-compose.yml and .env)
+log "Syncing source from workspace..."
+rsync -av \
+  --exclude='.git' \
+  --exclude='node_modules' \
+  --exclude='.next' \
+  --exclude='.env' \
+  --exclude='docker-compose.yml' \
+  "$WORKSPACE/" "$DEPLOY_DIR/" > /dev/null 2>&1
+ok "Source synced"
 
-print_error() {
-    echo -e "${RED}✗ $1${NC}"
-    exit 1
-}
+cd "$DEPLOY_DIR"
 
-# Check dependencies
-check_dependencies() {
-    print_step "Checking dependencies..."
-    
-    command -v node >/dev/null 2>&1 || print_error "Node.js is required but not installed."
-    command -v npm >/dev/null 2>&1 || print_error "npm is required but not installed."
-    
-    if [ "$ENVIRONMENT" = "production" ]; then
-        command -v vercel >/dev/null 2>&1 || print_error "Vercel CLI is required for production deployment. Run: npm i -g vercel"
-    fi
-}
+# 2. Build (unless --skip-build)
+if [ "$1" != "--skip-build" ]; then
+  log "Building Docker image..."
+  docker compose build --no-cache app 2>&1 | tail -3
+  ok "Image built"
+fi
 
-# Install dependencies
-install_deps() {
-    print_step "Installing dependencies..."
-    npm ci
-}
+# 3. Swap container
+log "Deploying..."
+docker stop storyteller-app 2>/dev/null || true
+docker rm storyteller-app 2>/dev/null || true
+docker compose up -d 2>&1
+ok "Containers started"
 
-# Setup environment
-setup_environment() {
-    print_step "Setting up environment..."
-    
-    if [ "$ENVIRONMENT" = "local" ]; then
-        if [ ! -f .env.local ]; then
-            print_warning "Creating .env.local from template..."
-            cp .env.example .env.local
-            print_warning "Please edit .env.local with your actual values before continuing!"
-            read -p "Press Enter after you've configured .env.local..."
-        fi
-    fi
-}
-
-# Database setup
-setup_database() {
-    print_step "Setting up database..."
-    
-    # Generate Prisma client
-    npx prisma generate
-    
-    # Run migrations
-    if [ "$ENVIRONMENT" = "local" ]; then
-        npx prisma migrate deploy
-        print_step "Database migrations completed"
-    else
-        print_warning "Database migrations will run automatically during Vercel build"
-    fi
-}
-
-# Local development
-start_local() {
-    print_step "Starting local development server..."
-    npm run dev
-}
-
-# Production deployment
-deploy_production() {
-    print_step "Deploying to production..."
-    
-    # Check if logged in to Vercel
-    if ! vercel whoami >/dev/null 2>&1; then
-        print_warning "Not logged in to Vercel. Running vercel login..."
-        vercel login
-    fi
-    
-    # Deploy
-    vercel --prod
-    
-    print_step "Production deployment completed!"
-    print_warning "Don't forget to:"
-    echo "1. Configure emmett.wtf domain in Vercel dashboard"
-    echo "2. Set up DNS records for emmett.wtf"
-    echo "3. Set environment variables in Vercel dashboard"
-    echo "4. Test the complete user flow"
-}
-
-# Build for testing
-test_build() {
-    print_step "Testing build..."
-    npm run build
-    print_step "Build successful!"
-}
-
-# Main execution
-main() {
-    check_dependencies
-    install_deps
-    setup_environment
-    setup_database
-    
-    if [ "$ENVIRONMENT" = "local" ]; then
-        test_build
-        start_local
-    elif [ "$ENVIRONMENT" = "production" ]; then
-        test_build
-        deploy_production
-    else
-        print_error "Invalid environment. Use 'local' or 'production'"
-    fi
-}
-
-# Run main function
-main "$@"
+# 4. Wait and verify
+log "Waiting for startup..."
+sleep 6
+STATUS=$(curl -s -o /dev/null -w '%{http_code}' https://storyteller.emmett.wtf)
+if [ "$STATUS" = "200" ]; then
+  ok "storyteller.emmett.wtf is live (HTTP $STATUS)"
+else
+  err "Site returned HTTP $STATUS — check: docker logs storyteller-app --tail 20"
+fi
