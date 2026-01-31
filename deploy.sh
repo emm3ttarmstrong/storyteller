@@ -21,7 +21,7 @@ err() { echo -e "${RED}ERR:${NC} $1"; exit 1; }
 
 # 1. Sync source (preserve docker-compose.yml and .env)
 log "Syncing source from workspace..."
-rsync -av \
+rsync -av --delete \
   --exclude='.git' \
   --exclude='node_modules' \
   --exclude='.next' \
