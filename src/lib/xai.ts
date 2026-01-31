@@ -8,6 +8,12 @@ const xai = new OpenAI({
 });
 
 interface GenerationContext {
+  storyPrompt: string; // New: from wizard
+  conflict: string; // New: from wizard
+  endingDirection: string; // New: from wizard
+  settingName: string; // New: from wizard
+  settingDescription: string; // New: from wizard
+  
   premise: string;
   rollingSummary: string | null;
   characters: Array<{
@@ -16,7 +22,8 @@ interface GenerationContext {
   }>;
   lastSceneText: string | null;
   choiceText: string | null;
-  // Wizard settings
+  
+  // Old wizard settings (kept for compatibility if used elsewhere)
   genre?: string;
   tags: string[];
   isNsfw: boolean;
@@ -42,7 +49,9 @@ function buildSystemPrompt(context: GenerationContext): string {
   const narrativeStructure = getNarrativeStructureGuidance(context.tone.narrativeStructure);
   const characterFocus = getCharacterFocusGuidance(context.tone.characterFocus);
   
-  return `You are a masterful storyteller crafting an interactive narrative. You must respond with ONLY valid JSON matching this exact schema:
+  return `${context.storyPrompt}
+
+You are a masterful storyteller crafting an interactive narrative. You must respond with ONLY valid JSON matching this exact schema:
 
 {
   "scene_text": "${responseLength} of vivid, immersive narrative prose",
@@ -64,7 +73,9 @@ function buildSystemPrompt(context: GenerationContext): string {
 }
 
 STORY REQUIREMENTS:
-${context.genre ? `- Genre: ${context.genre}` : ''}
+${context.conflict ? `- Central Conflict: ${context.conflict}` : ''}
+${context.endingDirection ? `- Desired Ending: ${context.endingDirection}` : ''}
+${context.settingName ? `- Setting: ${context.settingName} - ${context.settingDescription}` : ''}
 ${context.tags.length > 0 ? `- Themes/Tags: ${context.tags.join(', ')}` : ''}
 ${contentGuidance}
 
@@ -139,8 +150,12 @@ function getCharacterFocusGuidance(characterFocus?: string): string {
 function buildUserPrompt(context: GenerationContext): string {
   const parts: string[] = [];
 
-  // Story premise
-  parts.push(`STORY PREMISE:\n${context.premise}`);
+  // Story context from wizard
+  parts.push(`CORE STORY CONTEXT:\n`);
+  parts.push(`- Story Prompt: ${context.storyPrompt}`);
+  parts.push(`- Central Conflict: ${context.conflict}`);
+  parts.push(`- Desired Ending: ${context.endingDirection}`);
+  parts.push(`- Setting: ${context.settingName} - ${context.settingDescription}`);
 
   // Character canon
   if (context.characters.length > 0) {

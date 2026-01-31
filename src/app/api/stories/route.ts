@@ -39,26 +39,39 @@ export async function POST(request: Request) {
       );
     }
 
-    const { title, premise, genre, tags, isNsfw, contentLevel, tone, modelParams, initialCharacters } = parsed.data;
+    const { 
+      title, 
+      storyPrompt, 
+      conflict, 
+      endingDirection, 
+      settingName, 
+      settingDescription, 
+      tags, 
+      isNsfw, 
+      contentLevel, 
+      initialCharacters 
+    } = parsed.data;
 
     const story = await db.story.create({
       data: {
         title,
-        premise,
-        genre,
+        storyPrompt,
+        conflict,
+        endingDirection,
+        settingName,
+        settingDescription,
         tags,
         isNsfw,
         contentLevel,
-        tone: tone as Prisma.InputJsonValue,
-        modelParams: modelParams as Prisma.InputJsonValue,
+        tone: {} as Prisma.InputJsonValue, // Default empty for now, will be populated by AI generation
+        modelParams: {} as Prisma.InputJsonValue, // Default empty for now, will be populated by AI generation
         characters: {
           create: initialCharacters.map(char => ({
             name: char.name,
-            canon: { 
-              appearance: char.appearance,
+            isProtagonist: char.isProtagonist,
+            canon: {
               personality: char.personality,
-              background: char.background,
-              traits: char.traits
+              background: char.background || "",
              } as Prisma.InputJsonValue,
           })),
         },

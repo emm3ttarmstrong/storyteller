@@ -44,19 +44,19 @@ export type LlmResponse = z.infer<typeof LlmResponseSchema>;
  */
 export const CreateStorySchema = z.object({
   title: z.string().min(1, "Title is required").max(200),
-  premise: z.string().min(10, "Premise must be at least 10 characters").max(5000),
-  genre: z.string().min(1, "Genre is required").max(100),
+  storyPrompt: z.string().min(1, "Story prompt is required").max(5000),
+  conflict: z.string().min(1, "Conflict is required").max(1000),
+  endingDirection: z.string().min(1, "Ending direction is required").max(100),
+  settingName: z.string().min(1, "Setting name is required").max(200),
+  settingDescription: z.string().min(1, "Setting description is required").max(5000),
   tags: z.array(z.string()).default([]),
-  isNsfw: z.boolean().default(true),
+  isNsfw: z.boolean().default(false),
   contentLevel: z.number().int().min(1).max(10).default(5),
-  tone: z.record(z.string(), z.string()).default({}), // e.g., { writingStyle: 'literary', narrativeStructure: 'branching' }
-  modelParams: z.record(z.string(), z.any()).default({}), // e.g., { temperature: 0.8, responseLength: 'medium' }
   initialCharacters: z.array(z.object({
     name: z.string().min(1, "Character name is required").max(100),
-    appearance: z.string().max(500).optional(),
     personality: z.string().min(1, "Personality is required").max(1000),
     background: z.string().max(1000).optional(),
-    traits: z.array(z.string()).default([]),
+    isProtagonist: z.boolean().default(false), // New field
   })).default([]),
 });
 
