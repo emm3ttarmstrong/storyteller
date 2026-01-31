@@ -57,12 +57,12 @@ export async function POST(
       lastSceneText,
       choiceText: choiceText || null,
       // Wizard settings
-      genre: story.genre,
-      tags: story.tags || [],
-      isNsfw: story.isNsfw || false,
-      contentLevel: story.contentLevel || 5,
-      tone: (story.tone as any) || {},
-      modelParams: (story.modelParams as any) || {},
+      genre: story.genre ?? undefined,
+      tags: story.tags ?? [],
+      isNsfw: story.isNsfw ?? false,
+      contentLevel: story.contentLevel ?? 5,
+      tone: (story.tone as any) ?? {},
+      modelParams: (story.modelParams as any) ?? {},
     });
 
     // Create new characters first
