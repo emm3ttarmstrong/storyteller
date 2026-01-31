@@ -2,59 +2,64 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { StorySetupStep } from "./wizard/story-setup-step";
-import { CharacterCreationStep } from "./wizard/character-creation-step";
-import { ModelParametersStep } from "./wizard/model-parameters-step";
-import { ReviewStep } from "./wizard/review-step";
+import { Screen1_StoryPrompt } from "./wizard/Screen1_StoryPrompt";
+import { Screen2_Tags } from "./wizard/Screen2_Tags";
+import { Screen3_CharacterSetting } from "./wizard/Screen3_CharacterSetting";
+import { Screen4_Plot } from "./wizard/Screen4_Plot";
+import { Screen5_OpeningScene } from "./wizard/Screen5_OpeningScene";
 
 export interface Character {
   name: string;
-  appearance: string;
+  gender: string;
   personality: string;
   background: string;
-  traits: string[];
+}
+
+export interface Setting {
+  name: string;
+  description: string;
+  era: string;
 }
 
 export interface StoryWizardData {
-  // Story Setup
-  title: string;
-  premise: string;
-  genre: string;
+  // Screen 1: Story Prompt
+  storyPrompt: string;
+  
+  // Screen 2: Tags & Content
   tags: string[];
-  isNsfw: boolean;
   contentLevel: number;
+  isNsfw: boolean;
   
-  // Character Creation
-  characters: Character[];
+  // Screen 3: Character & Setting (from API)
+  selectedCharacter: Character | null;
+  selectedSetting: Setting | null;
   
-  // Model Parameters
-  writingStyle: string;
-  narrativeStructure: string;
-  characterFocus: string;
-  responseLength: string;
-  customParams: Record<string, any>;
+  // Screen 4: Plot (from API)
+  conflict: string;
+  endingDirection: string;
+  
+  // Screen 5: Final details
+  title: string;
 }
 
 const INITIAL_DATA: StoryWizardData = {
-  title: "",
-  premise: "",
-  genre: "",
+  storyPrompt: "",
   tags: [],
-  isNsfw: true,
   contentLevel: 5,
-  characters: [],
-  writingStyle: "literary",
-  narrativeStructure: "branching",
-  characterFocus: "balanced",
-  responseLength: "medium",
-  customParams: {},
+  isNsfw: false,
+  selectedCharacter: null,
+  selectedSetting: null,
+  conflict: "",
+  endingDirection: "",
+  title: "",
 };
 
 const STEPS = [
-  { id: 1, name: "Story Setup", component: StorySetupStep },
-  { id: 2, name: "Characters", component: CharacterCreationStep },
-  { id: 3, name: "AI Settings", component: ModelParametersStep },
-  { id: 4, name: "Review", component: ReviewStep },
+  { id: 1, name: "Story Prompt", component: Screen1_StoryPrompt },
+  { id: 2, name: "Tags & Content", component: Screen2_Tags },
+  { id: 3, name: "Character & Setting", component: Screen3_CharacterSetting },
+  { id: 4, name: "Plot", component: Screen4_Plot },
+  { id: 5, name: "Final Details", component: Screen5_OpeningScene },
 ];
 
 interface StoryWizardProps {
@@ -91,21 +96,25 @@ export function StoryWizard({ onClose }: StoryWizardProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: data.title,
-          premise: data.premise,
-          genre: data.genre,
+          premise: data.storyPrompt, // Use storyPrompt as premise for now
+          storyPrompt: data.storyPrompt,
+          conflict: data.conflict,
+          endingDirection: data.endingDirection,
+          settingName: data.selectedSetting?.name,
+          settingDescription: data.selectedSetting?.description,
           tags: data.tags,
           isNsfw: data.isNsfw,
           contentLevel: data.contentLevel,
-          tone: {
-            writingStyle: data.writingStyle,
-            narrativeStructure: data.narrativeStructure,
-            characterFocus: data.characterFocus,
-          },
-          modelParams: {
-            responseLength: data.responseLength,
-            ...data.customParams,
-          },
-          initialCharacters: data.characters,
+          tone: {}, // Default empty tone object
+          modelParams: {}, // Default empty model params
+          initialCharacters: data.selectedCharacter ? [{
+            name: data.selectedCharacter.name,
+            appearance: "", // Not used in new wizard
+            personality: data.selectedCharacter.personality,
+            background: data.selectedCharacter.background,
+            traits: [], // Not used in new wizard
+            isProtagonist: true, // Mark as protagonist
+          }] : [],
         }),
       });
 
